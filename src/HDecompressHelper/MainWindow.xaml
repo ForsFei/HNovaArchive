@@ -1,0 +1,577 @@
+<Window x:Class="HDecompressHelper.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
+        xmlns:models="clr-namespace:HDecompressHelper.Models"
+        Title="HDecompress Helper"
+        Width="1180"
+        Height="780"
+        MinWidth="900"
+        MinHeight="650"
+        WindowStartupLocation="CenterScreen"
+        WindowStyle="None"
+        ResizeMode="CanResize"
+        Background="{DynamicResource CanvasBrush}"
+        Foreground="{DynamicResource TextPrimaryBrush}"
+        AllowDrop="True"
+        PreviewDragOver="OnPreviewDragOver"
+        Drop="OnDrop">
+
+    <shell:WindowChrome.WindowChrome>
+        <shell:WindowChrome CaptionHeight="0"
+                            ResizeBorderThickness="6"
+                            CornerRadius="0"
+                            GlassFrameThickness="0"
+                            UseAeroCaptionButtons="False" />
+    </shell:WindowChrome.WindowChrome>
+
+    <Window.Resources>
+        <Style x:Key="CompactSelectorButtonStyle" TargetType="Button" BasedOn="{StaticResource GhostButtonStyle}">
+            <Setter Property="Height" Value="31" />
+            <Setter Property="Padding" Value="11,0" />
+            <Setter Property="FontSize" Value="11" />
+        </Style>
+
+        <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Height" Value="30" />
+            <Setter Property="Padding" Value="9,5" />
+            <Setter Property="Background" Value="Transparent" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderThickness" Value="0" />
+            <Setter Property="VerticalContentAlignment" Value="Center" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+
+        <Style x:Key="PasswordComboBoxStyle" TargetType="ComboBox">
+            <Setter Property="Height" Value="31" />
+            <Setter Property="Padding" Value="7,3" />
+            <Setter Property="Background" Value="{DynamicResource Surface1Brush}" />
+            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            <Setter Property="BorderBrush" Value="{DynamicResource BorderBrush}" />
+            <Setter Property="BorderThickness" Value="1" />
+            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
+            <Setter Property="FontSize" Value="12" />
+        </Style>
+    </Window.Resources>
+
+    <Border BorderBrush="{DynamicResource BorderBrush}"
+            BorderThickness="1"
+            Background="{DynamicResource CanvasBrush}">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="44" />
+                <RowDefinition Height="190" />
+                <RowDefinition Height="*" />
+                <RowDefinition Height="38" />
+            </Grid.RowDefinitions>
+
+            <Grid Grid.Row="0"
+                  Background="{DynamicResource Surface0Brush}"
+                  MouseLeftButtonDown="OnTitleBarMouseLeftButtonDown">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Orientation="Horizontal" VerticalAlignment="Center" Margin="18,0,0,0">
+                    <Border Width="24" Height="24" CornerRadius="6" Background="{DynamicResource AccentTintBrush}"
+                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1">
+                        <Path Data="M5,7 L12,3 L19,7 L19,17 L12,21 L5,17 Z M8,9 L12,11 L16,9 M12,11 L12,17"
+                              Stroke="{DynamicResource AccentBrush}"
+                              StrokeThickness="1.4"
+                              Stretch="Uniform"
+                              Margin="4" />
+                    </Border>
+                    <TextBlock Text="HDECOMPRESS" Margin="10,0,0,0" VerticalAlignment="Center"
+                               FontSize="11" FontWeight="SemiBold"
+                               Foreground="{DynamicResource TextSecondaryBrush}" />
+                    <Border Width="1" Height="13" Background="{DynamicResource BorderBrush}" Margin="12,0" />
+                    <TextBlock Text="Extraction Control Center · V3" VerticalAlignment="Center" FontSize="11"
+                               Foreground="{DynamicResource TextMutedBrush}" />
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" shell:WindowChrome.IsHitTestVisibleInChrome="True">
+                    <Button Style="{StaticResource WindowControlButtonStyle}" Click="OnMinimizeClick">
+                        <Path Data="M0,0 L10,0" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1" />
+                    </Button>
+                    <Button Style="{StaticResource WindowControlButtonStyle}" Click="OnMaximizeClick">
+                        <Rectangle Width="9" Height="8" Stroke="{DynamicResource TextSecondaryBrush}" StrokeThickness="1" />
+                    </Button>
+                    <Button Style="{StaticResource WindowControlButtonStyle}" Click="OnCloseClick">
+                        <Path Data="M0,0 L9,9 M9,0 L0,9" Stroke="{DynamicResource DangerBrush}" StrokeThickness="1" />
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <Grid Grid.Row="1" Margin="28,16,28,14">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="62" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*" />
+                        <ColumnDefinition Width="Auto" />
+                    </Grid.ColumnDefinitions>
+
+                    <StackPanel VerticalAlignment="Center">
+                        <TextBlock Text="解压任务" Style="{StaticResource TitleTextStyle}" />
+                        <TextBlock Margin="0,6,0,0" Style="{StaticResource CaptionTextStyle}">
+                            <Run Text="{Binding ActiveCount, Mode=OneWay}" Foreground="{DynamicResource AccentBrush}" FontWeight="SemiBold" />
+                            <Run Text=" 个活动任务" />
+                            <Run Text="  ·  " Foreground="{DynamicResource TextMutedBrush}" />
+                            <Run Text="{Binding CompletedCount, Mode=OneWay}" Foreground="{DynamicResource SuccessBrush}" FontWeight="SemiBold" />
+                            <Run Text=" 个已完成" />
+                            <Run Text="  ·  历史最多保留 100 条" Foreground="{DynamicResource TextMutedBrush}" />
+                        </TextBlock>
+                    </StackPanel>
+
+                    <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Border Height="36" Width="285" Background="{DynamicResource Surface1Brush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="7"
+                                Padding="11,0" Margin="0,0,9,0">
+                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                <Ellipse Width="7" Height="7" Margin="0,0,8,0">
+                                    <Ellipse.Style>
+                                        <Style TargetType="Ellipse">
+                                            <Setter Property="Fill" Value="{DynamicResource SuccessBrush}" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding IsSelectedEngineAvailable}" Value="False">
+                                                    <Setter Property="Fill" Value="{DynamicResource DangerBrush}" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </Ellipse.Style>
+                                </Ellipse>
+                                <TextBlock Text="{Binding EngineStatusText}" FontSize="11"
+                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                           TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Border>
+                        <Button Style="{StaticResource PrimaryButtonStyle}"
+                                Command="{Binding AddArchivesFromDialogCommand}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="＋" FontSize="17" Foreground="{DynamicResource PrimaryButtonTextBrush}" Margin="0,-1,7,0" />
+                                <TextBlock Text="添加压缩文件" Foreground="{DynamicResource PrimaryButtonTextBrush}" VerticalAlignment="Center" />
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </Grid>
+
+                <Border Grid.Row="1" Margin="0,8,0,0" Padding="12,10"
+                        Background="{DynamicResource Surface0Brush}"
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="解压引擎" Width="62" VerticalAlignment="Center" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <Button Content="7-Zip" Command="{Binding SelectSevenZipCommand}" Margin="0,0,5,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsSevenZipSelected}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentTintBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="WinRAR" Command="{Binding SelectWinRarCommand}" Margin="0,0,6,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsWinRarSelected}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentTintBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="{Binding ChooseEngineText}" Command="{Binding ChooseEngineExecutableCommand}"
+                                    Style="{StaticResource CompactSelectorButtonStyle}" Margin="0,0,18,0" />
+
+                            <Border Width="1" Height="18" Background="{DynamicResource BorderBrush}" Margin="0,6,18,6" />
+                            <TextBlock Text="显示" Width="34" VerticalAlignment="Center" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <Button Content="☰ 列表" Command="{Binding SetListViewCommand}" Margin="0,0,5,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsListView}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentTintBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="▦ 平铺" Command="{Binding SetTilesViewCommand}" Margin="0,0,18,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsTilesView}" Value="True">
+                                                <Setter Property="Background" Value="{DynamicResource AccentTintBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource AccentBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+                            <Button Content="{Binding ThemeToggleText}"
+                                    Command="{Binding ToggleThemeCommand}"
+                                    Style="{StaticResource CompactSelectorButtonStyle}" />
+                        </StackPanel>
+
+                        <Grid Grid.Row="1" Margin="0,7,0,0">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="270" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="Auto" />
+                                <ColumnDefinition Width="*" />
+                            </Grid.ColumnDefinitions>
+
+                            <Button Command="{Binding ToggleUsePasswordCommand}" Margin="0,0,7,0">
+                                <Button.Style>
+                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
+                                        <Setter Property="Content" Value="◇ 启用密码" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding UsePassword}" Value="True">
+                                                <Setter Property="Content" Value="◆ 已启用密码" />
+                                                <Setter Property="Background" Value="{DynamicResource WarningTintBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
+                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Button.Style>
+                            </Button>
+
+                            <Border Grid.Column="1" Height="31" Background="{DynamicResource Surface1Brush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6"
+                                    IsEnabled="{Binding UsePassword}">
+                                <Grid>
+                                    <ComboBox ItemsSource="{Binding SavedPasswords}"
+                                              Text="{Binding NewTaskPassword, UpdateSourceTrigger=PropertyChanged}"
+                                              IsEditable="True"
+                                              IsTextSearchEnabled="False"
+                                              StaysOpenOnEdit="True"
+                                              ToolTip="输入密码，或从成功密码列表选择"
+                                              Style="{StaticResource PasswordComboBoxStyle}" />
+                                    <PasswordBox x:Name="ArchivePasswordBox"
+                                                 PasswordChar="●"
+                                                 Margin="1,1,29,1"
+                                                 PasswordChanged="OnArchivePasswordChanged">
+                                        <PasswordBox.Style>
+                                            <Style TargetType="PasswordBox" BasedOn="{StaticResource PasswordBoxStyle}">
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
+                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </PasswordBox.Style>
+                                    </PasswordBox>
+                                </Grid>
+                            </Border>
+                            <Button Grid.Column="2" Content="{Binding PasswordVisibilityText}"
+                                    Command="{Binding TogglePasswordVisibilityCommand}"
+                                    Style="{StaticResource CompactSelectorButtonStyle}"
+                                    IsEnabled="{Binding UsePassword}" Margin="7,0,0,0" />
+                            <Button Grid.Column="3" Content="删除密码"
+                                    Command="{Binding DeleteSavedPasswordCommand}"
+                                    Style="{StaticResource CompactSelectorButtonStyle}"
+                                    Margin="7,0,0,0"
+                                    ToolTip="从成功密码列表删除当前密码" />
+                            <TextBlock Grid.Column="4" Margin="14,0,0,0" VerticalAlignment="Center"
+                                       Text="安全提示：输入和成功密码列表会明文写入 settings.json、history.json 和任务日志"
+                                       TextTrimming="CharacterEllipsis" FontSize="10"
+                                       Foreground="{DynamicResource WarningBrush}" />
+                        </Grid>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <Grid Grid.Row="2" Margin="28,0,20,0">
+                <ListBox ItemsSource="{Binding Tasks}"
+                         Background="Transparent"
+                         BorderThickness="0"
+                         ScrollViewer.HorizontalScrollBarVisibility="Disabled"
+                         ScrollViewer.VerticalScrollBarVisibility="Auto"
+                         VirtualizingPanel.IsVirtualizing="True"
+                         VirtualizingPanel.VirtualizationMode="Recycling">
+                    <ListBox.Style>
+                        <Style TargetType="ListBox">
+                            <Setter Property="ScrollViewer.CanContentScroll" Value="True" />
+                            <Setter Property="ItemsPanel">
+                                <Setter.Value>
+                                    <ItemsPanelTemplate>
+                                        <VirtualizingStackPanel />
+                                    </ItemsPanelTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding ViewMode}" Value="{x:Static models:TaskViewMode.Tiles}">
+                                    <Setter Property="ScrollViewer.CanContentScroll" Value="False" />
+                                    <Setter Property="ItemsPanel">
+                                        <Setter.Value>
+                                            <ItemsPanelTemplate>
+                                                <WrapPanel />
+                                            </ItemsPanelTemplate>
+                                        </Setter.Value>
+                                    </Setter>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.Style>
+                    <ListBox.ItemContainerStyle>
+                        <Style TargetType="ListBoxItem">
+                            <Setter Property="HorizontalContentAlignment" Value="Stretch" />
+                            <Setter Property="Padding" Value="0" />
+                            <Setter Property="Margin" Value="0,0,8,12" />
+                            <Setter Property="Background" Value="Transparent" />
+                            <Setter Property="BorderThickness" Value="0" />
+                            <Setter Property="Focusable" Value="False" />
+                            <Setter Property="Template">
+                                <Setter.Value>
+                                    <ControlTemplate TargetType="ListBoxItem">
+                                        <ContentPresenter />
+                                    </ControlTemplate>
+                                </Setter.Value>
+                            </Setter>
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding DataContext.ViewMode, RelativeSource={RelativeSource AncestorType={x:Type ListBox}}}"
+                                             Value="{x:Static models:TaskViewMode.Tiles}">
+                                    <Setter Property="Width" Value="535" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </ListBox.ItemContainerStyle>
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Border Style="{StaticResource CardStyle}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="3" />
+                                        <ColumnDefinition Width="*" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <Border Background="{DynamicResource AccentBrush}" CornerRadius="2" Margin="0,1,0,1" />
+
+                                    <Grid Grid.Column="1" Margin="18,0,0,0">
+                                        <Grid.RowDefinitions>
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                            <RowDefinition Height="Auto" />
+                                        </Grid.RowDefinitions>
+
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="{Binding ArchiveName}" FontSize="16" FontWeight="SemiBold"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <StackPanel Orientation="Horizontal" Margin="0,6,0,0">
+                                                    <Border Padding="7,2" CornerRadius="5" Background="{DynamicResource AccentTintBrush}"
+                                                            BorderBrush="{DynamicResource AccentBrush}" BorderThickness="1" Margin="0,0,7,0">
+                                                        <TextBlock Text="{Binding EngineLabel}" FontSize="9.5" Foreground="{DynamicResource AccentBrush}" />
+                                                    </Border>
+                                                    <Border Padding="7,2" CornerRadius="5" Background="{DynamicResource WarningTintBrush}"
+                                                            BorderBrush="{DynamicResource WarningBrush}" BorderThickness="1" Margin="0,0,7,0"
+                                                            Visibility="{Binding HasPassword, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                                        <TextBlock Text="明文密码" FontSize="9.5" Foreground="{DynamicResource WarningBrush}" />
+                                                    </Border>
+                                                    <TextBlock Text="{Binding ArchivePath}" FontSize="10.5" VerticalAlignment="Center"
+                                                               Foreground="{DynamicResource TextMutedBrush}" TextTrimming="CharacterEllipsis" />
+                                                </StackPanel>
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Top">
+                                                <TextBlock Text="{Binding Progress, StringFormat={}{0}%}" FontSize="19" FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource AccentBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                <Border Style="{StaticResource StatusBadgeStyle}">
+                                                    <TextBlock Text="{Binding StatusLabel}" FontSize="11" FontWeight="SemiBold" />
+                                                </Border>
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Grid Grid.Row="1" Margin="0,15,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto" />
+                                                <ColumnDefinition Width="*" />
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock Text="目标" FontSize="10" Foreground="{DynamicResource TextMutedBrush}"
+                                                       Margin="0,0,9,0" VerticalAlignment="Center" />
+                                            <TextBlock Grid.Column="1" Text="{Binding DestinationPath}" FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis" />
+                                        </Grid>
+
+                                        <ProgressBar Grid.Row="2" Margin="0,13,0,0" Minimum="0" Maximum="100"
+                                                     Value="{Binding Progress}" />
+
+                                        <Grid Grid.Row="3" Margin="0,12,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel>
+                                                <TextBlock Text="当前文件" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
+                                                <TextBlock Text="{Binding CurrentFileDisplay}" Margin="0,4,0,0" FontSize="12"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                                <TextBlock Text="{Binding StatusDescription}" Margin="0,4,0,0" FontSize="10"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           TextTrimming="CharacterEllipsis" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Bottom">
+                                                <TextBlock Text="{Binding ArchiveSizeText}" FontSize="11"
+                                                           Foreground="{DynamicResource TextMutedBrush}" Margin="0,0,18,0" />
+                                                <TextBlock Text="{Binding ElapsedText}" FontFamily="Cascadia Mono, Consolas" FontSize="11"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                            </StackPanel>
+                                        </Grid>
+
+                                        <Border Grid.Row="4" Margin="0,12,0,0" Padding="10,8"
+                                                Background="{DynamicResource DangerTintBrush}" CornerRadius="6">
+                                            <Border.Style>
+                                                <Style TargetType="Border">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding ErrorMessage}" Value="{x:Null}">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                        <DataTrigger Binding="{Binding ErrorMessage}" Value="">
+                                                            <Setter Property="Visibility" Value="Collapsed" />
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Border.Style>
+                                            <TextBlock Text="{Binding ErrorMessage}" Foreground="{DynamicResource DangerBrush}"
+                                                       FontSize="11" TextWrapping="Wrap" />
+                                        </Border>
+
+                                        <Grid Grid.Row="5" Margin="0,15,0,0">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="Auto" />
+                                            </Grid.ColumnDefinitions>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Content="源目录" Style="{StaticResource GhostButtonStyle}" Margin="0,0,7,0"
+                                                        Command="{Binding DataContext.OpenSourceCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="目标目录" Style="{StaticResource GhostButtonStyle}" Margin="0,0,7,0"
+                                                        Command="{Binding DataContext.OpenDestinationCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="查看日志" Style="{StaticResource GhostButtonStyle}"
+                                                        Command="{Binding DataContext.ShowDetailsCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                            <StackPanel Grid.Column="1" Orientation="Horizontal">
+                                                <Button Content="取消" Style="{StaticResource DangerButtonStyle}" Margin="0,0,7,0"
+                                                        Visibility="{Binding CanCancel, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Command="{Binding DataContext.CancelTaskCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                        CommandParameter="{Binding}" />
+                                                <Button Content="移除" Style="{StaticResource SecondaryButtonStyle}"
+                                                        Visibility="{Binding CanRemove, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                                        Command="{Binding DataContext.RemoveTaskCommand, RelativeSource={RelativeSource AncestorType={x:Type Window}}}"
+                                                        CommandParameter="{Binding}" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Grid>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <Grid IsHitTestVisible="False">
+                    <Grid.Style>
+                        <Style TargetType="Grid">
+                            <Setter Property="Visibility" Value="Collapsed" />
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding Tasks.Count}" Value="0">
+                                    <Setter Property="Visibility" Value="Visible" />
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Grid.Style>
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,8,50">
+                        <Border Width="66" Height="66" CornerRadius="18" Background="{DynamicResource Surface1Brush}"
+                                BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1">
+                            <Path Data="M5,7 L12,3 L19,7 L19,17 L12,21 L5,17 Z M5,7 L12,11 L19,7 M12,11 L12,21"
+                                  Stroke="{DynamicResource AccentBrush}" StrokeThickness="1.3" Stretch="Uniform" Margin="17" />
+                        </Border>
+                        <TextBlock Text="把压缩文件拖到这里" FontSize="17" FontWeight="SemiBold"
+                                   HorizontalAlignment="Center" Margin="0,18,0,0" />
+                                    <TextBlock Text="支持常见格式及 7Z/ZIP/RAR 分卷首卷；异常扩展名会安全改名"
+                                   FontSize="11" Foreground="{DynamicResource TextMutedBrush}"
+                                   HorizontalAlignment="Center" Margin="0,7,0,0" />
+                    </StackPanel>
+                </Grid>
+            </Grid>
+
+            <Grid Grid.Row="3" Background="{DynamicResource Surface0Brush}" Margin="0,1,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="Auto" />
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="{Binding StatusMessage}" Margin="28,0,12,0" VerticalAlignment="Center"
+                           FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}"
+                           TextTrimming="CharacterEllipsis" />
+                <Button Grid.Column="1" Content="清理已结束任务" Style="{StaticResource GhostButtonStyle}"
+                        Height="27" Margin="0,0,20,0" Padding="10,0"
+                        Command="{Binding ClearFinishedCommand}" />
+            </Grid>
+
+            <Grid Grid.RowSpan="4" Panel.ZIndex="20"
+                  Visibility="{Binding IsDetailsOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border Background="#C8000000" />
+                <Border Width="820" Height="560" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Style="{StaticResource CardStyle}" Background="{DynamicResource Surface0Brush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+                        <Grid Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="Auto" />
+                            </Grid.ColumnDefinitions>
+                            <StackPanel>
+                                <TextBlock Text="任务日志" FontSize="18" FontWeight="SemiBold" />
+                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
+                                    <TextBlock Text="{Binding DetailsTitle}" FontSize="11"
+                                               Foreground="{DynamicResource TextMutedBrush}" />
+                                    <TextBlock Text="  ·  包含明文密码" FontSize="11"
+                                               Foreground="{DynamicResource WarningBrush}" />
+                                </StackPanel>
+                            </StackPanel>
+                            <Button Grid.Column="1" Content="关闭" Style="{StaticResource SecondaryButtonStyle}"
+                                    Command="{Binding CloseDetailsCommand}" />
+                        </Grid>
+                        <TextBox Grid.Row="1" Text="{Binding DetailsText}" Style="{StaticResource LogTextBoxStyle}" />
+                    </Grid>
+                </Border>
+            </Grid>
+        </Grid>
+    </Border>
+</Window>
