@@ -6,3 +6,9 @@ TestResults/
 *.suo
 .tmp-*/
 
+# Local planning and reference notes
+progress.md
+task_plan.md
+findings.md
+Chatgpt回复.md
+
