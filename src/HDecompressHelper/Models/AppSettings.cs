@@ -12,10 +12,6 @@ public sealed class AppSettings
 
     public string? WinRarPath { get; set; }
 
-    public bool UsePassword { get; set; }
-
-    public bool IsPasswordVisible { get; set; }
-
     public string Password { get; set; } = string.Empty;
 
     public List<string> SavedPasswords { get; set; } = [];

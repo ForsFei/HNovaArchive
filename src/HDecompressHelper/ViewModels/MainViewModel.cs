@@ -95,8 +95,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     public string ThemeToggleText => Theme == AppTheme.Dark ? "浅色背景" : "深色背景";
 
-    public string PasswordVisibilityText => IsPasswordVisible ? "隐藏" : "显示";
-
     [ObservableProperty]
     private string _statusMessage = "拖放压缩文件到窗口，或点击右上角添加任务。";
 
@@ -114,12 +112,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [ObservableProperty]
     private TaskViewMode _viewMode = TaskViewMode.List;
-
-    [ObservableProperty]
-    private bool _usePassword;
-
-    [ObservableProperty]
-    private bool _isPasswordVisible;
 
     [ObservableProperty]
     private string _newTaskPassword = string.Empty;
@@ -150,7 +142,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         var added = 0;
         var renamed = 0;
         var errors = new List<string>();
-        var password = UsePassword ? NewTaskPassword : string.Empty;
+        var password = NewTaskPassword;
         foreach (var candidate in archivePaths.Distinct(StringComparer.OrdinalIgnoreCase))
         {
             ArchiveInputPreparation preparation;
@@ -241,12 +233,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
 
     [RelayCommand]
     private void ToggleTheme() => Theme = Theme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;
-
-    [RelayCommand]
-    private void ToggleUsePassword() => UsePassword = !UsePassword;
-
-    [RelayCommand]
-    private void TogglePasswordVisibility() => IsPasswordVisible = !IsPasswordVisible;
 
     [RelayCommand(CanExecute = nameof(CanDeleteSavedPassword))]
     private void DeleteSavedPassword()
@@ -571,8 +557,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         SelectedEngine = settings.DefaultEngine;
         Theme = settings.Theme;
         ViewMode = settings.ViewMode;
-        UsePassword = settings.UsePassword;
-        IsPasswordVisible = settings.IsPasswordVisible;
         NewTaskPassword = settings.Password ?? string.Empty;
         SavedPasswords.Clear();
         foreach (var password in (settings.SavedPasswords ?? [])
@@ -655,8 +639,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 DefaultEngine = SelectedEngine,
                 SevenZipPath = _sevenZipLocator.ExecutablePath,
                 WinRarPath = _winRarLocator.ExecutablePath,
-                UsePassword = UsePassword,
-                IsPasswordVisible = IsPasswordVisible,
                 Password = NewTaskPassword,
                 SavedPasswords = SavedPasswords.ToList()
             });
@@ -707,14 +689,6 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
     {
         OnPropertyChanged(nameof(IsListView));
         OnPropertyChanged(nameof(IsTilesView));
-        QueueSettingsSave();
-    }
-
-    partial void OnUsePasswordChanged(bool value) => QueueSettingsSave();
-
-    partial void OnIsPasswordVisibleChanged(bool value)
-    {
-        OnPropertyChanged(nameof(PasswordVisibilityText));
         QueueSettingsSave();
     }
 

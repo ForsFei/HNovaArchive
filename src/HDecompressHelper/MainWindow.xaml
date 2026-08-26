@@ -13,6 +13,8 @@
         ResizeMode="CanResize"
         Background="{DynamicResource CanvasBrush}"
         Foreground="{DynamicResource TextPrimaryBrush}"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
         AllowDrop="True"
         PreviewDragOver="OnPreviewDragOver"
         Drop="OnDrop">
@@ -30,17 +32,6 @@
             <Setter Property="Height" Value="31" />
             <Setter Property="Padding" Value="11,0" />
             <Setter Property="FontSize" Value="11" />
-        </Style>
-
-        <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
-            <Setter Property="Height" Value="30" />
-            <Setter Property="Padding" Value="9,5" />
-            <Setter Property="Background" Value="Transparent" />
-            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-            <Setter Property="BorderThickness" Value="0" />
-            <Setter Property="VerticalContentAlignment" Value="Center" />
-            <Setter Property="FontFamily" Value="Cascadia Mono, Consolas" />
-            <Setter Property="FontSize" Value="12" />
         </Style>
 
         <Style x:Key="PasswordComboBoxStyle" TargetType="ComboBox">
@@ -61,7 +52,7 @@
         <Grid>
             <Grid.RowDefinitions>
                 <RowDefinition Height="44" />
-                <RowDefinition Height="190" />
+                <RowDefinition Height="156" />
                 <RowDefinition Height="*" />
                 <RowDefinition Height="38" />
             </Grid.RowDefinitions>
@@ -87,7 +78,7 @@
                                FontSize="11" FontWeight="SemiBold"
                                Foreground="{DynamicResource TextSecondaryBrush}" />
                     <Border Width="1" Height="13" Background="{DynamicResource BorderBrush}" Margin="12,0" />
-                    <TextBlock Text="Extraction Control Center · V3" VerticalAlignment="Center" FontSize="11"
+                    <TextBlock Text="Extraction Control Center · V4" VerticalAlignment="Center" FontSize="11"
                                Foreground="{DynamicResource TextMutedBrush}" />
                 </StackPanel>
 
@@ -162,14 +153,17 @@
 
                 <Border Grid.Row="1" Margin="0,8,0,0" Padding="12,10"
                         Background="{DynamicResource Surface0Brush}"
-                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9">
+                        BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="9"
+                        SnapsToDevicePixels="True">
                     <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="Auto" />
-                        </Grid.RowDefinitions>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="Auto" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="Auto" />
+                        </Grid.ColumnDefinitions>
 
-                        <StackPanel Orientation="Horizontal">
+                        <StackPanel Grid.Column="0" Orientation="Horizontal">
                             <TextBlock Text="解压引擎" Width="62" VerticalAlignment="Center" FontSize="10"
                                        Foreground="{DynamicResource TextMutedBrush}" />
                             <Button Content="7-Zip" Command="{Binding SelectSevenZipCommand}" Margin="0,0,5,0">
@@ -199,9 +193,31 @@
                                 </Button.Style>
                             </Button>
                             <Button Content="{Binding ChooseEngineText}" Command="{Binding ChooseEngineExecutableCommand}"
-                                    Style="{StaticResource CompactSelectorButtonStyle}" Margin="0,0,18,0" />
+                                    Style="{StaticResource CompactSelectorButtonStyle}" />
+                        </StackPanel>
 
-                            <Border Width="1" Height="18" Background="{DynamicResource BorderBrush}" Margin="0,6,18,6" />
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
+                            <Border Width="1" Height="18" Background="{DynamicResource BorderBrush}" Margin="0,6,12,6" />
+                            <TextBlock Text="密码" Width="34" VerticalAlignment="Center" FontSize="10"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <Border Width="220" Height="31" Background="{DynamicResource Surface1Brush}"
+                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6">
+                                <ComboBox ItemsSource="{Binding SavedPasswords}"
+                                          Text="{Binding NewTaskPassword, UpdateSourceTrigger=PropertyChanged}"
+                                          IsEditable="True"
+                                          IsTextSearchEnabled="False"
+                                          StaysOpenOnEdit="True"
+                                          ToolTip="输入密码，或从成功密码列表选择"
+                                          Style="{StaticResource PasswordComboBoxStyle}" />
+                            </Border>
+                            <Button Content="删除密码"
+                                    Command="{Binding DeleteSavedPasswordCommand}"
+                                    Style="{StaticResource CompactSelectorButtonStyle}"
+                                    Margin="7,0,0,0"
+                                    ToolTip="从成功密码列表删除当前密码" />
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="3" Orientation="Horizontal" HorizontalAlignment="Right">
                             <TextBlock Text="显示" Width="34" VerticalAlignment="Center" FontSize="10"
                                        Foreground="{DynamicResource TextMutedBrush}" />
                             <Button Content="☰ 列表" Command="{Binding SetListViewCommand}" Margin="0,0,5,0">
@@ -217,7 +233,7 @@
                                     </Style>
                                 </Button.Style>
                             </Button>
-                            <Button Content="▦ 平铺" Command="{Binding SetTilesViewCommand}" Margin="0,0,18,0">
+                            <Button Content="▦ 平铺" Command="{Binding SetTilesViewCommand}" Margin="0,0,8,0">
                                 <Button.Style>
                                     <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
                                         <Style.Triggers>
@@ -234,73 +250,6 @@
                                     Command="{Binding ToggleThemeCommand}"
                                     Style="{StaticResource CompactSelectorButtonStyle}" />
                         </StackPanel>
-
-                        <Grid Grid.Row="1" Margin="0,7,0,0">
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="270" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <Button Command="{Binding ToggleUsePasswordCommand}" Margin="0,0,7,0">
-                                <Button.Style>
-                                    <Style TargetType="Button" BasedOn="{StaticResource CompactSelectorButtonStyle}">
-                                        <Setter Property="Content" Value="◇ 启用密码" />
-                                        <Style.Triggers>
-                                            <DataTrigger Binding="{Binding UsePassword}" Value="True">
-                                                <Setter Property="Content" Value="◆ 已启用密码" />
-                                                <Setter Property="Background" Value="{DynamicResource WarningTintBrush}" />
-                                                <Setter Property="BorderBrush" Value="{DynamicResource WarningBrush}" />
-                                                <Setter Property="Foreground" Value="{DynamicResource WarningBrush}" />
-                                            </DataTrigger>
-                                        </Style.Triggers>
-                                    </Style>
-                                </Button.Style>
-                            </Button>
-
-                            <Border Grid.Column="1" Height="31" Background="{DynamicResource Surface1Brush}"
-                                    BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="6"
-                                    IsEnabled="{Binding UsePassword}">
-                                <Grid>
-                                    <ComboBox ItemsSource="{Binding SavedPasswords}"
-                                              Text="{Binding NewTaskPassword, UpdateSourceTrigger=PropertyChanged}"
-                                              IsEditable="True"
-                                              IsTextSearchEnabled="False"
-                                              StaysOpenOnEdit="True"
-                                              ToolTip="输入密码，或从成功密码列表选择"
-                                              Style="{StaticResource PasswordComboBoxStyle}" />
-                                    <PasswordBox x:Name="ArchivePasswordBox"
-                                                 PasswordChar="●"
-                                                 Margin="1,1,29,1"
-                                                 PasswordChanged="OnArchivePasswordChanged">
-                                        <PasswordBox.Style>
-                                            <Style TargetType="PasswordBox" BasedOn="{StaticResource PasswordBoxStyle}">
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsPasswordVisible}" Value="True">
-                                                        <Setter Property="Visibility" Value="Collapsed" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </PasswordBox.Style>
-                                    </PasswordBox>
-                                </Grid>
-                            </Border>
-                            <Button Grid.Column="2" Content="{Binding PasswordVisibilityText}"
-                                    Command="{Binding TogglePasswordVisibilityCommand}"
-                                    Style="{StaticResource CompactSelectorButtonStyle}"
-                                    IsEnabled="{Binding UsePassword}" Margin="7,0,0,0" />
-                            <Button Grid.Column="3" Content="删除密码"
-                                    Command="{Binding DeleteSavedPasswordCommand}"
-                                    Style="{StaticResource CompactSelectorButtonStyle}"
-                                    Margin="7,0,0,0"
-                                    ToolTip="从成功密码列表删除当前密码" />
-                            <TextBlock Grid.Column="4" Margin="14,0,0,0" VerticalAlignment="Center"
-                                       Text="安全提示：输入和成功密码列表会明文写入 settings.json、history.json 和任务日志"
-                                       TextTrimming="CharacterEllipsis" FontSize="10"
-                                       Foreground="{DynamicResource WarningBrush}" />
-                        </Grid>
                     </Grid>
                 </Border>
             </Grid>
@@ -558,12 +507,8 @@
                             </Grid.ColumnDefinitions>
                             <StackPanel>
                                 <TextBlock Text="任务日志" FontSize="18" FontWeight="SemiBold" />
-                                <StackPanel Orientation="Horizontal" Margin="0,5,0,0">
-                                    <TextBlock Text="{Binding DetailsTitle}" FontSize="11"
-                                               Foreground="{DynamicResource TextMutedBrush}" />
-                                    <TextBlock Text="  ·  包含明文密码" FontSize="11"
-                                               Foreground="{DynamicResource WarningBrush}" />
-                                </StackPanel>
+                                <TextBlock Text="{Binding DetailsTitle}" Margin="0,5,0,0" FontSize="11"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
                             </StackPanel>
                             <Button Grid.Column="1" Content="关闭" Style="{StaticResource SecondaryButtonStyle}"
                                     Command="{Binding CloseDetailsCommand}" />

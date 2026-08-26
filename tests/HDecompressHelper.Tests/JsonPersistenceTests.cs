@@ -20,8 +20,6 @@ public sealed class JsonPersistenceTests
                 DefaultEngine = ExtractionEngine.WinRar,
                 SevenZipPath = @"C:\Tools\7z.exe",
                 WinRarPath = @"C:\Tools\Rar.exe",
-                UsePassword = true,
-                IsPasswordVisible = true,
                 Password = password,
                 SavedPasswords = ["first", password]
             });
@@ -31,8 +29,6 @@ public sealed class JsonPersistenceTests
             Assert.Equal(AppTheme.Light, restored.Theme);
             Assert.Equal(TaskViewMode.Tiles, restored.ViewMode);
             Assert.Equal(ExtractionEngine.WinRar, restored.DefaultEngine);
-            Assert.True(restored.UsePassword);
-            Assert.True(restored.IsPasswordVisible);
             Assert.Equal(password, restored.Password);
             Assert.Equal(["first", password], restored.SavedPasswords);
             Assert.Contains(password, File.ReadAllText(service.FilePath), StringComparison.Ordinal);
