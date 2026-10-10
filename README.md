@@ -1,4 +1,4 @@
-# HDecompressHelper
+# HNova Archive（原 HDecompressHelper）
 
 一个基于 `.NET 8 + WPF` 的桌面端多任务解压管理器。程序不自行实现解压算法，而是为每个任务启动独立的 7-Zip 或 WinRAR 命令行进程，集中展示进度、当前文件、任务状态、历史记录和目录直达操作。
 
@@ -21,6 +21,16 @@
 > 密码完全不加密。它会以明文出现在 `%AppData%\HDecompressHelper\settings.json`、`history.json`、任务详情日志以及解压程序命令行中。任何能读取这些文件或查看本机进程命令行的程序/用户都可能看到密码。请勿在不可信电脑上保存敏感密码。
 
 支持添加 ZIP、7Z、RAR、TAR、GZ、XZ、BZ2、CAB、ISO、WIM 等常见扩展名；实际能否解压取决于当前选择的解压引擎。自动重命名只改变文件名，不会转换文件内容；如果文件本身不是压缩数据，解压仍会失败。改名发生在原目录，目标文件已存在时不会覆盖，并会跳过该文件。
+
+## 运行 Release 构建
+
+执行 `dotnet build .\HDecompressHelper.sln -c Release` 后，主程序位于：
+
+```text
+src\HDecompressHelper\bin\Release\net8.0-windows\HDecompressHelper.exe
+```
+
+请保留该目录中的 `.dll`、`.json` 和 `.exe` 文件在一起，不要只复制可执行文件。运行要求 Windows 10/11 和 .NET 8 Desktop Runtime，并且至少安装 7-Zip 或 WinRAR 中的一种。
 
 ## 持久化文件
 
@@ -79,9 +89,9 @@ WinRAR 的文本输出不是稳定的机器事件协议。程序会从 `\r`/`\n`
 
 每个进程的 stdout 和 stderr 分别最多保留 512 KiB，避免异常工具输出无限占用内存；达到上限后的后续内容会被截断，并在日志末尾标注。
 
-## 运行
+## 从源码构建
 
-要求 Windows 10/11 和 .NET 8 Desktop Runtime。至少安装 7-Zip 或 WinRAR 中的一种；首次启动默认使用 7-Zip。
+首次启动默认使用 7-Zip。开发环境需要 .NET 8 SDK 或能够构建 `net8.0-windows` 的更新版 SDK。
 
 ```powershell
 dotnet build .\HDecompressHelper.sln
@@ -93,6 +103,8 @@ dotnet run --project .\src\HDecompressHelper\HDecompressHelper.csproj
 ```powershell
 dotnet run --project .\src\HDecompressHelper\HDecompressHelper.csproj -- "D:\Downloads\demo.7z"
 ```
+
+构建和测试会重新生成 `.vs`、`obj`、Debug 输出及测试项目的 `bin` 等临时目录；这些目录均不属于源码，可以随时删除。主程序 Release 输出位于前述 `src\HDecompressHelper\bin\Release\net8.0-windows`。
 
 ## 测试
 
