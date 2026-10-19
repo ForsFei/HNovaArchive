@@ -4,6 +4,7 @@
         xmlns:shell="clr-namespace:System.Windows.Shell;assembly=PresentationFramework"
         xmlns:models="clr-namespace:HDecompressHelper.Models"
         Title="HDecompress Helper"
+        Icon="Assets/AppIcon.ico"
         Width="1180"
         Height="780"
         MinWidth="900"

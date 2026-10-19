@@ -22,6 +22,7 @@ public sealed class ExtractionCommandTests
         Assert.Contains($"-p{password}", startInfo.ArgumentList);
         Assert.Contains(password, command, StringComparison.Ordinal);
         Assert.Contains("-bsp1", startInfo.ArgumentList);
+        Assert.True(startInfo.RedirectStandardInput);
     }
 
     [Fact]
@@ -46,5 +47,25 @@ public sealed class ExtractionCommandTests
         Assert.Contains($"-p{password}", startInfo.ArgumentList);
         Assert.Contains(password, command, StringComparison.Ordinal);
         Assert.Contains("-ibck", command, StringComparison.Ordinal);
+        Assert.True(startInfo.RedirectStandardInput);
+    }
+
+    [Fact]
+    public void WinRarWithoutPasswordDisablesInteractivePasswordPrompt()
+    {
+        var startInfo = WinRarExtractionService.CreateStartInfo(
+            @"C:\Program Files\WinRAR\WinRAR.exe",
+            @"C:\Archives\protected.rar",
+            @"C:\Output",
+            password: string.Empty);
+        var command = WinRarExtractionService.BuildDisplayCommand(
+            startInfo.FileName,
+            @"C:\Archives\protected.rar",
+            @"C:\Output",
+            password: string.Empty);
+
+        Assert.Contains("-p-", startInfo.ArgumentList);
+        Assert.Contains("-p-", command, StringComparison.Ordinal);
+        Assert.True(startInfo.RedirectStandardInput);
     }
 }

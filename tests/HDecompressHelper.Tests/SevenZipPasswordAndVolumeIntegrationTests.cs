@@ -7,6 +7,43 @@ namespace HDecompressHelper.Tests;
 public sealed class SevenZipPasswordAndVolumeIntegrationTests
 {
     [Fact]
+    public async Task MissingPasswordFailsPromptlyWithActionableMessage()
+    {
+        var locator = new SevenZipLocator();
+        var executable = locator.Locate();
+        if (executable is null)
+        {
+            return;
+        }
+
+        var directory = CreateTemporaryDirectory();
+        try
+        {
+            const string correctPassword = "correct-integration-password";
+            var input = Path.Combine(directory, "secret.txt");
+            var archive = Path.Combine(directory, "secure.7z");
+            var output = Path.Combine(directory, "output");
+            await File.WriteAllTextAsync(input, "encrypted payload");
+            await RunSevenZipAsync(executable, "a", archive, input, $"-p{correctPassword}", "-mhe=on", "-y");
+
+            var service = new SevenZipExtractionService(locator);
+            using var timeout = new CancellationTokenSource(TimeSpan.FromSeconds(10));
+            var result = await service.ExtractAsync(
+                new ExtractionRequest(Guid.NewGuid(), archive, output, Password: string.Empty),
+                progress: null,
+                lifecycle: null,
+                timeout.Token);
+
+            Assert.Equal(ExtractionExitKind.FatalError, result.ExitKind);
+            Assert.Contains("需要密码", result.Summary, StringComparison.Ordinal);
+        }
+        finally
+        {
+            Directory.Delete(directory, recursive: true);
+        }
+    }
+
+    [Fact]
     public async Task WrongPasswordRetriesSavedPasswordsAndPersistsEffectivePassword()
     {
         var locator = new SevenZipLocator();

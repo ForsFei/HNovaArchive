@@ -10,7 +10,7 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
 {
     public ExtractionEngine Engine => ExtractionEngine.WinRar;
 
-    public Task<ExtractionResult> ExtractAsync(
+    public async Task<ExtractionResult> ExtractAsync(
         ExtractionRequest request,
         IProgress<ExtractionProgress>? progress,
         IProgress<ExtractionLifecycle>? lifecycle,
@@ -34,7 +34,7 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
         var startInfo = CreateStartInfo(executablePath, archivePath, destinationPath, request.Password);
         var command = BuildDisplayCommand(executablePath, archivePath, destinationPath, request.Password);
 
-        return CliProcessRunner.RunAsync(
+        var result = await CliProcessRunner.RunAsync(
             Engine,
             startInfo,
             command,
@@ -43,6 +43,8 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
             progress,
             lifecycle,
             cancellationToken);
+
+        return PasswordFailureClassifier.NormalizeMissingPassword(result, request.Password);
     }
 
     internal static ProcessStartInfo CreateStartInfo(
@@ -56,6 +58,7 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
         {
             FileName = executablePath,
             UseShellExecute = false,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
@@ -71,10 +74,7 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
             startInfo.ArgumentList.Add("-ibck");
         }
 
-        if (!string.IsNullOrEmpty(password))
-        {
-            startInfo.ArgumentList.Add($"-p{password}");
-        }
+        startInfo.ArgumentList.Add(string.IsNullOrEmpty(password) ? "-p-" : $"-p{password}");
 
         startInfo.ArgumentList.Add(archivePath);
         startInfo.ArgumentList.Add(Path.EndsInDirectorySeparator(destinationPath)
@@ -96,7 +96,7 @@ public sealed class WinRarExtractionService(IWinRarLocator winRarLocator) : IExt
             ? " -ibck"
             : string.Empty;
         var passwordArgument = string.IsNullOrEmpty(password)
-            ? string.Empty
+            ? " -p-"
             : $" -p{CommandLineDisplay.Quote(password)}";
         var destinationArgument = Path.EndsInDirectorySeparator(destinationPath)
             ? destinationPath

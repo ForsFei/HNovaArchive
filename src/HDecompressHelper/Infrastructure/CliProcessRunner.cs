@@ -29,6 +29,13 @@ internal static class CliProcessRunner
             throw new InvalidOperationException($"无法启动 {engine} 解压进程。");
         }
 
+        // The desktop app has no interactive console. Closing stdin makes CLI
+        // password prompts terminate immediately instead of waiting forever at 0%.
+        if (startInfo.RedirectStandardInput)
+        {
+            process.StandardInput.Close();
+        }
+
         lifecycle?.Report(new ExtractionLifecycle(
             ExtractionLifecycleStage.ProcessStarted,
             process.Id));

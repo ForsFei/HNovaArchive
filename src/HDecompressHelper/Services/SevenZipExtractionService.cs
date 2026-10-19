@@ -9,7 +9,7 @@ public sealed class SevenZipExtractionService(ISevenZipLocator sevenZipLocator) 
 {
     public ExtractionEngine Engine => ExtractionEngine.SevenZip;
 
-    public Task<ExtractionResult> ExtractAsync(
+    public async Task<ExtractionResult> ExtractAsync(
         ExtractionRequest request,
         IProgress<ExtractionProgress>? progress,
         IProgress<ExtractionLifecycle>? lifecycle,
@@ -27,7 +27,7 @@ public sealed class SevenZipExtractionService(ISevenZipLocator sevenZipLocator) 
         var startInfo = CreateStartInfo(executablePath, archivePath, destinationPath, request.Password);
         var command = BuildDisplayCommand(executablePath, archivePath, destinationPath, request.Password);
 
-        return CliProcessRunner.RunAsync(
+        var result = await CliProcessRunner.RunAsync(
             Engine,
             startInfo,
             command,
@@ -36,6 +36,8 @@ public sealed class SevenZipExtractionService(ISevenZipLocator sevenZipLocator) 
             progress,
             lifecycle,
             cancellationToken);
+
+        return PasswordFailureClassifier.NormalizeMissingPassword(result, request.Password);
     }
 
     internal static ProcessStartInfo CreateStartInfo(
@@ -48,6 +50,7 @@ public sealed class SevenZipExtractionService(ISevenZipLocator sevenZipLocator) 
         {
             FileName = executablePath,
             UseShellExecute = false,
+            RedirectStandardInput = true,
             RedirectStandardOutput = true,
             RedirectStandardError = true,
             CreateNoWindow = true,
