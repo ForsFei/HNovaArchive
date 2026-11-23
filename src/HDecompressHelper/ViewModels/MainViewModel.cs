@@ -67,6 +67,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         RestoreHistory();
         _isInitializing = false;
         RefreshEngineStatus();
+        InitializeWorkflow();
     }
 
     public ObservableCollection<ExtractionTaskViewModel> Tasks { get; } = [];
@@ -393,6 +394,23 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 attemptLifecycle,
                 cancellation.Token);
 
+            var allAttempts = retryResult.Attempts.ToList();
+            while (NeedsPasswordPrompt(retryResult.FinalResult))
+            {
+                task.CurrentFile = "等待输入解压密码…";
+                var password = await PromptPasswordAsync(task, cancellation.Token);
+                cancellation.Token.ThrowIfCancellationRequested();
+                if (password is null) break;
+                task.SetPassword(password);
+                task.Progress = 0;
+                retryResult = await _passwordRetryService.RunAsync(
+                    new ExtractionRequest(task.Id, task.ArchivePath, task.DestinationPath, task.Engine, password),
+                    [], progress, lifecycle, attemptLifecycle, cancellation.Token);
+                var attemptOffset = allAttempts.Count;
+                allAttempts.AddRange(retryResult.Attempts.Select(a => a with { AttemptNumber = attemptOffset + a.AttemptNumber }));
+            }
+            retryResult = retryResult with { Attempts = allAttempts };
+
             var result = retryResult.FinalResult;
             task.DetailText = BuildDetailText(retryResult);
             if (result.IsSuccessful)
@@ -449,6 +467,7 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
             task.ProcessId = null;
             _cancellations.Remove(task.Id);
             cancellation.Dispose();
+            FinishWorkflowTask(task);
             SaveHistory();
             NotifySummaryChanged();
             CancelTaskCommand.NotifyCanExecuteChanged();
@@ -558,6 +577,10 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         Theme = settings.Theme;
         ViewMode = settings.ViewMode;
         NewTaskPassword = settings.Password ?? string.Empty;
+        foreach (var folder in settings.WatchedFolders ?? [])
+            if (!string.IsNullOrWhiteSpace(folder) && Path.IsPathFullyQualified(folder) &&
+                !WatchedFolders.Contains(folder, StringComparer.OrdinalIgnoreCase)) WatchedFolders.Add(folder);
+        FolderMonitoringEnabled = settings.FolderMonitoringEnabled;
         SavedPasswords.Clear();
         foreach (var password in (settings.SavedPasswords ?? [])
                      .Where(password => !string.IsNullOrEmpty(password))
@@ -640,7 +663,9 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
                 SevenZipPath = _sevenZipLocator.ExecutablePath,
                 WinRarPath = _winRarLocator.ExecutablePath,
                 Password = NewTaskPassword,
-                SavedPasswords = SavedPasswords.ToList()
+                SavedPasswords = SavedPasswords.ToList(),
+                WatchedFolders = WatchedFolders.ToList(),
+                FolderMonitoringEnabled = FolderMonitoringEnabled
             });
         }
         catch (IOException exception)
@@ -730,6 +755,8 @@ public sealed partial class MainViewModel : ObservableObject, IDisposable
         }
 
         _disposed = true;
+        _workflowTimer?.Stop();
+        _workflowStop.Cancel();
         _elapsedTimer.Stop();
         _settingsSaveTimer.Stop();
         SaveSettingsNow();

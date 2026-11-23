@@ -15,4 +15,8 @@ public sealed class AppSettings
     public string Password { get; set; } = string.Empty;
 
     public List<string> SavedPasswords { get; set; } = [];
+
+    public List<string> WatchedFolders { get; set; } = [];
+
+    public bool FolderMonitoringEnabled { get; set; }
 }

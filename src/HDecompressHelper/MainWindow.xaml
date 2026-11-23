@@ -121,6 +121,8 @@
                     </StackPanel>
 
                     <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                        <Button Content="自动工作流" Command="{Binding OpenWorkflowCommand}"
+                                Style="{StaticResource SecondaryButtonStyle}" Margin="0,0,9,0" />
                         <Border Height="36" Width="285" Background="{DynamicResource Surface1Brush}"
                                 BorderBrush="{DynamicResource BorderBrush}" BorderThickness="1" CornerRadius="7"
                                 Padding="11,0" Margin="0,0,9,0">
@@ -489,6 +491,68 @@
                 <Button Grid.Column="1" Content="清理已结束任务" Style="{StaticResource GhostButtonStyle}"
                         Height="27" Margin="0,0,20,0" Padding="10,0"
                         Command="{Binding ClearFinishedCommand}" />
+            </Grid>
+
+            <Grid Grid.RowSpan="4" Panel.ZIndex="19"
+                  Visibility="{Binding IsWorkflowOpen, Converter={StaticResource BooleanToVisibilityConverter}}">
+                <Border Background="#C8000000" />
+                <Border Width="760" MaxHeight="640" HorizontalAlignment="Center" VerticalAlignment="Center"
+                        Style="{StaticResource CardStyle}" Background="{DynamicResource Surface0Brush}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                            <RowDefinition Height="Auto" />
+                        </Grid.RowDefinitions>
+                        <DockPanel Margin="0,0,0,16">
+                            <Button DockPanel.Dock="Right" Content="关闭" Command="{Binding CloseWorkflowCommand}"
+                                    Style="{StaticResource SecondaryButtonStyle}" />
+                            <TextBlock Text="自动解压工作流" FontSize="20" VerticalAlignment="Center" />
+                        </DockPanel>
+                        <StackPanel Grid.Row="1">
+                            <TextBlock Text="递归监控下列目录，发现压缩包自动解压，并继续处理解压产物。"
+                                       TextWrapping="Wrap" Foreground="{DynamicResource TextSecondaryBrush}" />
+                            <TextBlock Text="文件稳定 5 秒后处理；失败或跳过的文件不会重复添加。密码成功后自动保存。"
+                                       Margin="0,6,0,12" FontSize="11" TextWrapping="Wrap" Foreground="{DynamicResource TextMutedBrush}" />
+                            <Border Padding="12,10" Margin="0,0,0,12" CornerRadius="7" Background="{DynamicResource Surface1Brush}">
+                                <StackPanel>
+                                    <TextBlock Text="自动识别规则" FontWeight="SemiBold" Margin="0,0,0,6" />
+                                    <TextBlock Text="① 标准后缀：ZIP、7Z、RAR、TAR、GZ、XZ、BZ2、CAB、ISO、WIM 等。" TextWrapping="Wrap" FontSize="11" />
+                                    <TextBlock Text="② 附加伪装后缀：例如 a.7z.11111、a.zip.bak，去掉压缩后缀后的附加部分。" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0" />
+                                    <TextBlock Text="③ 文件头识别：即使叫 a.mp4 或没有后缀，也会检查 ZIP / 7Z / RAR / GZIP / XZ / BZ2 / CAB / TAR 的特征；命中后规范后缀。普通视频会跳过。" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0" />
+                                    <TextBlock Text="④ 分卷首卷：支持 .7z.001、.zip.001、.rar.001、.part1.rar；跳过后续卷。多卷请放在同一目录。" TextWrapping="Wrap" FontSize="11" Margin="0,5,0,0" />
+                                </StackPanel>
+                            </Border>
+                            <DockPanel Margin="0,0,0,12">
+                                <Button DockPanel.Dock="Right" Content="立即扫描" Command="{Binding ScanWorkflowNowCommand}"
+                                        Style="{StaticResource SecondaryButtonStyle}" Margin="8,0,0,0" />
+                                <Button DockPanel.Dock="Right" Content="添加文件夹" Command="{Binding AddWatchedFolderCommand}"
+                                        Style="{StaticResource PrimaryButtonStyle}" />
+                                <CheckBox Content="启用自动监控（随应用运行）" IsChecked="{Binding FolderMonitoringEnabled}"
+                                          VerticalAlignment="Center" Foreground="{DynamicResource TextPrimaryBrush}" />
+                            </DockPanel>
+                        </StackPanel>
+                        <ListBox Grid.Row="2" ItemsSource="{Binding WatchedFolders}" MinHeight="100" MaxHeight="240"
+                                 Background="{DynamicResource Surface1Brush}" BorderThickness="0"
+                                 ScrollViewer.HorizontalScrollBarVisibility="Disabled">
+                            <ListBox.ItemTemplate>
+                                <DataTemplate>
+                                    <DockPanel Margin="4,6">
+                                        <Button DockPanel.Dock="Right" Content="移除" Margin="12,0,0,0"
+                                                Style="{StaticResource GhostButtonStyle}"
+                                                Command="{Binding DataContext.RemoveWatchedFolderCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                CommandParameter="{Binding}" />
+                                        <TextBlock Text="{Binding}" TextWrapping="Wrap" VerticalAlignment="Center"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
+                                    </DockPanel>
+                                </DataTemplate>
+                            </ListBox.ItemTemplate>
+                        </ListBox>
+                        <TextBlock Grid.Row="3" Text="{Binding WorkflowStatus}" Margin="0,14,0,0" TextWrapping="Wrap"
+                                   Foreground="{DynamicResource AccentBrush}" />
+                    </Grid>
+                </Border>
             </Grid>
 
             <Grid Grid.RowSpan="4" Panel.ZIndex="20"
