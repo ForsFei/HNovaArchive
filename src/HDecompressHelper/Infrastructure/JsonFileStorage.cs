@@ -53,8 +53,9 @@ internal static class JsonFileStorage
         }
     }
 
-    public static string GetDefaultDataDirectory() => Path.Combine(
-        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-        "HDecompressHelper");
+    public static string GetDefaultDataDirectory() =>
+        File.Exists(Path.Combine(AppContext.BaseDirectory, "portable.mode"))
+            ? Path.Combine(AppContext.BaseDirectory, "Data")
+            : Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "HDecompressHelper");
 }
 
